@@ -628,9 +628,22 @@ const CATEGORY_COLORS = {
 
 let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let ADMIN_PASSWORD = DEFAULT_PASSWORD;
+let sessionPassword = null; // password the admin typed at login, sent with authenticated API calls
 let isAdmin = false;
+let apiAvailable = null; // null = not checked yet, true/false once known
 function hasStorage(){
   return !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
+}
+
+async function checkApi(){
+  if(apiAvailable !== null) return apiAvailable;
+  try{
+    const resp = await fetch('/api/directory', { method: 'GET' });
+    apiAvailable = resp.ok;
+  }catch(e){
+    apiAvailable = false;
+  }
+  return apiAvailable;
 }
 
 let editingPersonId = null;
@@ -666,10 +679,19 @@ document.querySelectorAll('.modal-overlay').forEach(ov=>{
 });
 
 // ===== persistence =====
-// Priority: 1) Claude artifact storage (only works inside claude.ai)
-//           2) external data.json next to this file (works on real hosting)
-//           3) embedded default data baked into this HTML
+// Priority: 1) Netlify Function API (/api/directory) — real server-side storage, works for ALL visitors
+//           2) Claude artifact storage (only works inside claude.ai preview)
+//           3) external data.json next to this file (works on plain static hosting)
+//           4) embedded default data baked into this HTML
 async function loadFromStorage(){
+  if(await checkApi()){
+    try{
+      const resp = await fetch('/api/directory');
+      const j = await resp.json();
+      if(j && j.data && Array.isArray(j.data.groups)){ DATA = j.data; }
+      return; // server is the source of truth — no need to check other fallbacks
+    }catch(e){ console.error(e); /* fall through */ }
+  }
   if(hasStorage()){
     try{
       const res = await window.storage.get('directory-data', true);
@@ -681,7 +703,7 @@ async function loadFromStorage(){
     }catch(e){ /* no custom password set yet */ }
     return;
   }
-  // Not running inside Claude — try to load data.json from the same folder.
+  // Not running inside Claude and no working API — try to load data.json from the same folder.
   try{
     const resp = await fetch('./data.json?_=' + Date.now());
     if(resp.ok){
@@ -693,6 +715,23 @@ async function loadFromStorage(){
 }
 
 async function saveData(){
+  if(await checkApi()){
+    try{
+      const resp = await fetch('/api/directory?action=save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': sessionPassword || '' },
+        body: JSON.stringify(DATA)
+      });
+      const j = await resp.json().catch(()=>({}));
+      if(resp.ok && j.ok){ return true; }
+      showToast('⚠ ' + (j.error || 'Не удалось сохранить на сервере'));
+      return false;
+    }catch(e){
+      console.error('API save error', e);
+      showToast('⚠ Ошибка сети при сохранении на сервере');
+      return false;
+    }
+  }
   if(hasStorage()){
     const payload = JSON.stringify(DATA);
     try{
@@ -714,25 +753,43 @@ async function saveData(){
       return false;
     }
   }
-  // Standalone hosting: there is no server to write to from the browser.
+  // Plain static hosting with no working API: there is no server to write to from the browser.
   // Changes stay in this tab only until the admin exports & re-uploads data.json.
   showToast('Сохранено в этой вкладке — скачайте data.json и загрузите на сервер');
   return false;
 }
 
-async function savePassword(){
-  if(!hasStorage()){
-    showToast('Новый пароль действует в этой вкладке — сохраните его через «Скачать data.json»');
-    return false;
+async function savePassword(newPassword){
+  if(await checkApi()){
+    try{
+      const resp = await fetch('/api/directory?action=password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': sessionPassword || '' },
+        body: JSON.stringify({ newPassword })
+      });
+      const j = await resp.json().catch(()=>({}));
+      if(resp.ok && j.ok){ sessionPassword = newPassword; ADMIN_PASSWORD = newPassword; return true; }
+      showToast('⚠ ' + (j.error || 'Не удалось сменить пароль'));
+      return false;
+    }catch(e){
+      console.error(e);
+      showToast('⚠ Ошибка сети при смене пароля');
+      return false;
+    }
   }
-  try{
-    await window.storage.set('directory-password', ADMIN_PASSWORD, true);
-    return true;
-  }catch(e){
-    console.error(e);
-    showToast('⚠ Не удалось сохранить новый пароль');
-    return false;
+  ADMIN_PASSWORD = newPassword;
+  if(hasStorage()){
+    try{
+      await window.storage.set('directory-password', ADMIN_PASSWORD, true);
+      return true;
+    }catch(e){
+      console.error(e);
+      showToast('⚠ Не удалось сохранить новый пароль');
+      return false;
+    }
   }
+  showToast('Новый пароль действует в этой вкладке — сохраните его через «Скачать data.json»');
+  return false;
 }
 
 // ===== render =====
@@ -974,7 +1031,7 @@ function setAdminState(on){
   adminToggleBtn.classList.toggle('is-admin', on);
   adminToggleLabel.textContent = on ? 'Режим администратора' : 'Вход для администратора';
   adminPanel.classList.toggle('visible', on);
-  document.getElementById('storageWarning').classList.toggle('visible', on && !hasStorage());
+  document.getElementById('storageWarning').classList.toggle('visible', on && !apiAvailable && !hasStorage());
   render();
 }
 
@@ -989,9 +1046,40 @@ adminToggleBtn.addEventListener('click', ()=>{
 document.getElementById('loginSubmitBtn').addEventListener('click', tryLogin);
 document.getElementById('loginPasswordInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryLogin(); });
 
-function tryLogin(){
+async function tryLogin(){
   const val = document.getElementById('loginPasswordInput').value;
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  submitBtn.disabled = true;
+
+  if(await checkApi()){
+    try{
+      const resp = await fetch('/api/directory?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: val })
+      });
+      const j = await resp.json().catch(()=>({ok:false}));
+      submitBtn.disabled = false;
+      if(j.ok){
+        sessionPassword = val;
+        closeModal('loginModal');
+        setAdminState(true);
+        showToast('Вы вошли как администратор');
+      } else {
+        document.getElementById('loginError').classList.add('visible');
+      }
+      return;
+    }catch(e){
+      console.error(e);
+      submitBtn.disabled = false;
+      showToast('⚠ Не удалось связаться с сервером — повторите');
+      return;
+    }
+  }
+
+  submitBtn.disabled = false;
   if(val === ADMIN_PASSWORD){
+    sessionPassword = val;
     closeModal('loginModal');
     setAdminState(true);
     showToast('Вы вошли как администратор');
@@ -1010,7 +1098,7 @@ document.getElementById('changePasswordBtn').addEventListener('click', ()=>{
   openModal('passwordModal');
 });
 
-// ===== export / import data.json (for sites hosted outside Claude) =====
+// ===== export / import data.json (manual backup / fallback for hosting without the API) =====
 document.getElementById('exportDataBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1021,8 +1109,8 @@ document.getElementById('exportDataBtn').addEventListener('click', ()=>{
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  showToast(hasStorage()
-    ? 'data.json скачан'
+  showToast((apiAvailable || hasStorage())
+    ? 'data.json скачан (резервная копия)'
     : 'data.json скачан — загрузите его на сервер рядом с index.html');
 });
 
@@ -1038,9 +1126,9 @@ document.getElementById('importFileInput').addEventListener('change', async (e)=
     const json = JSON.parse(text);
     if(!json || !Array.isArray(json.groups)) throw new Error('Неверный формат файла');
     DATA = json;
-    await saveData();
+    const ok = await saveData();
     render();
-    showToast('Данные загружены из файла');
+    showToast(ok ? 'Данные загружены и сохранены на сервере' : 'Данные загружены в эту вкладку');
   }catch(err){
     console.error(err);
     showToast('⚠ Не удалось прочитать файл: проверьте, что это data.json из этого справочника');
@@ -1051,8 +1139,7 @@ document.getElementById('importFileInput').addEventListener('change', async (e)=
 document.getElementById('savePasswordBtn').addEventListener('click', async ()=>{
   const val = document.getElementById('newPasswordInput').value.trim();
   if(!val){ showToast('Введите новый пароль'); return; }
-  ADMIN_PASSWORD = val;
-  const ok = await savePassword();
+  const ok = await savePassword(val);
   closeModal('passwordModal');
   if(ok) showToast('Пароль обновлён');
 });
