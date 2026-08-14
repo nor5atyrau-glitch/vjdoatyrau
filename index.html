@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Справочник — Атырауский филиал ТОО «ВЖДО»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --navy:#0B2A43;
+    --navy-2:#123A5E;
+    --blue:#1D96D4;
+    --blue-dim:#1D96D422;
+    --gold:#A6862C;
+    --gold-light:#C9A63F;
+    --bg:#F3F5F8;
+    --card:#FFFFFF;
+    --ink:#16232F;
+    --muted:#5E6C7C;
+    --line:#E1E6EC;
+    --danger:#C1443A;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'IBM Plex Serif', serif; margin:0;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  .rail-divider{
+    height:6px;
+    background-image:repeating-linear-gradient(90deg, var(--gold) 0 18px, transparent 18px 34px);
+    opacity:.9;
+  }
+
+  header.site-header{
+    background:linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 14px rgba(0,0,0,.18);
+  }
+  .header-inner{
+    max-width:1280px;
+    margin:0 auto;
+    padding:16px 24px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:14px; min-width:0;}
+  .brand img{height:52px; width:52px; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.35)); flex-shrink:0;}
+  .brand-text{min-width:0;}
+  .brand-eyebrow{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-light); margin-bottom:2px;}
+  .brand-title{font-family:'IBM Plex Serif', serif; font-weight:600; font-size:19px; line-height:1.25;}
+  .brand-sub{font-size:12.5px; color:#B9C6D4; margin-top:2px;}
+  .header-search{margin-left:auto; flex:1 1 260px; max-width:380px; position:relative;}
+  .header-search input{
+    width:100%; padding:11px 14px 11px 38px; border-radius:8px;
+    border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08);
+    color:#fff; font-size:14px; font-family:'IBM Plex Sans', sans-serif; outline:none;
+    transition:background .15s, border-color .15s;
+  }
+  .header-search input::placeholder{color:#9FB0C1;}
+  .header-search input:focus{background:rgba(255,255,255,.14); border-color:var(--gold-light);}
+  .header-search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:#9FB0C1;}
+  .search-count{font-size:11.5px; color:#9FB0C1; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-family:'IBM Plex Mono',monospace; display:none;}
+
+  .admin-toggle{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    padding:9px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:12.5px;
+    white-space:nowrap;
+    transition:background .15s;
+  }
+  .admin-toggle:hover{background:rgba(255,255,255,.16);}
+  .admin-toggle.is-admin{background:var(--gold); border-color:var(--gold); color:#2B2205;}
+  .admin-toggle svg{width:15px;height:15px; stroke:currentColor;}
+
+  .layout{
+    max-width:1280px; margin:0 auto; display:grid;
+    grid-template-columns:270px 1fr; gap:28px; padding:28px 24px 80px; align-items:start;
+  }
+
+  .sidebar{position:sticky; top:96px; display:flex; flex-direction:column; gap:16px;}
+  .side-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .side-card h3{font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); padding:12px 16px 8px; font-family:'IBM Plex Mono', monospace; font-weight:600;}
+  .nav-list{list-style:none; margin:0; padding:0 8px 10px;}
+  .nav-list li{margin:0;}
+  .nav-list a{display:flex; align-items:center; gap:10px; padding:8px 8px; border-radius:7px; text-decoration:none; font-size:13.2px; color:var(--ink); line-height:1.3; position:relative;}
+  .nav-list a:hover{background:var(--blue-dim);}
+  .nav-list a.active{background:var(--blue-dim); color:var(--navy); font-weight:600;}
+  .nav-dot{width:6px;height:6px;border-radius:50%; background:var(--gold); flex-shrink:0;}
+  .nav-count{margin-left:auto; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); background:var(--bg); border-radius:5px; padding:1px 6px;}
+
+  .contact-card{background:linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); color:#fff; border-radius:var(--radius); padding:16px;}
+  .contact-card h3{color:var(--gold-light); padding:0 0 10px; margin:0;}
+  .contact-row{display:flex; gap:9px; font-size:12.6px; color:#CBD7E3; line-height:1.5; margin-bottom:9px;}
+  .contact-row svg{width:15px;height:15px;stroke:var(--gold-light); flex-shrink:0; margin-top:2px;}
+  .contact-row b{color:#fff; font-weight:600;}
+  .contact-code{margin-top:12px; display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.08em; color:var(--gold-light); border:1px solid rgba(201,166,63,.4); padding:3px 8px; border-radius:5px;}
+
+  .admin-panel{
+    background:#fff; border:1px solid var(--gold-light); border-radius:var(--radius); padding:14px 16px;
+    display:none;
+  }
+  .admin-panel.visible{display:block;}
+  .admin-panel h3{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); margin-bottom:10px; font-family:'IBM Plex Mono',monospace;}
+  .admin-panel button.side-action{
+    width:100%; text-align:left; background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:8px 10px; border-radius:7px; font-size:12.6px; margin-bottom:8px; cursor:pointer; display:flex; gap:8px; align-items:center;
+  }
+  .admin-panel button.side-action:hover{border-color:var(--blue);}
+  .admin-panel button.side-action svg{width:14px;height:14px;stroke:var(--blue); flex-shrink:0;}
+  .admin-panel .logout-btn{color:var(--danger); border-color:#f0d3d0; background:#FBF1F0;}
+  .admin-panel .logout-btn svg{stroke:var(--danger);}
+  .storage-warning{
+    font-size:11.5px; color:#8a5a12; background:#FCF3DE; border:1px solid #EFDBA0;
+    padding:8px 10px; border-radius:7px; margin-top:8px; line-height:1.4; display:none;
+  }
+  .storage-warning.visible{display:block;}
+
+  main{min-width:0;}
+  .page-intro{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px; margin-bottom:22px; position:relative; overflow:hidden;}
+  .page-intro::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, var(--gold) 0%, var(--blue) 100%);}
+  .page-intro h1{font-size:24px; color:var(--navy); margin-bottom:6px;}
+  .page-intro p{margin:0; color:var(--muted); font-size:13.6px; line-height:1.55; max-width:70ch;}
+  .jump-nav{
+    display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap;
+    background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 12px;
+  }
+  .jump-nav label{font-size:12.6px; color:var(--muted); white-space:nowrap; font-weight:600;}
+  .jump-nav select{
+    flex:1; min-width:180px; padding:7px 10px; border-radius:6px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-size:13px; font-family:'IBM Plex Sans',sans-serif; outline:none; cursor:pointer;
+  }
+  .jump-nav select:focus{border-color:var(--blue);}
+  .stat-row{display:flex; gap:22px; margin-top:16px; flex-wrap:wrap;}
+
+  .map-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px 22px; margin-bottom:22px; position:relative; overflow:hidden;
+  }
+  .map-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, var(--blue) 0%, var(--gold) 100%);}
+  .map-card-head{display:flex; align-items:baseline; gap:10px; margin-bottom:4px; flex-wrap:wrap;}
+  .map-card-head h2{font-size:17px; color:var(--navy);}
+  .map-card p{margin:0 0 14px; color:var(--muted); font-size:13.2px; line-height:1.5; max-width:70ch;}
+  .map-frame-wrap{
+    position:relative; width:100%; padding-top:52%; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--bg);
+  }
+  .map-frame-wrap iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  #leafletMap{position:absolute; inset:0; width:100%; height:100%; background:var(--bg); font-family:'IBM Plex Sans',sans-serif;}
+  .map-legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted);}
+  .map-legend .legend-item{display:flex; align-items:center; gap:6px;}
+  .map-legend .dot{width:10px; height:10px; border-radius:50%; display:inline-block; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.15);}
+  .leaflet-popup-content-wrapper{border-radius:9px; font-family:'IBM Plex Sans',sans-serif;}
+  .leaflet-popup-content{margin:12px 14px; font-size:12.8px; line-height:1.45; min-width:190px;}
+  .popup-cat{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--gold); background:#FBF4E2; border:1px solid #EFDBA0; padding:1px 7px; border-radius:20px; margin-bottom:6px;
+  }
+  .popup-name{font-weight:600; color:var(--ink); margin-bottom:3px; font-size:13.4px;}
+  .popup-addr{color:var(--muted); margin-bottom:8px;}
+  .popup-link{color:var(--blue); text-decoration:none; font-size:12px; font-weight:600;}
+  .popup-link:hover{text-decoration:underline;}
+  .map-links{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+  .map-links a{
+    display:inline-flex; align-items:center; gap:7px; font-size:12.4px; color:var(--navy);
+    text-decoration:none; background:var(--bg); border:1px solid var(--line); padding:7px 12px; border-radius:7px;
+    transition:border-color .15s, color .15s;
+  }
+  .map-links a:hover{border-color:var(--blue); color:var(--blue);}
+  .map-links a svg{width:13px;height:13px; stroke:currentColor; flex-shrink:0;}
+  @media (max-width: 900px){
+    .map-frame-wrap{padding-top:110%;}
+  }
+  .stat{font-family:'IBM Plex Mono', monospace;}
+  .stat b{display:block; font-size:20px; color:var(--navy); font-family:'IBM Plex Serif', serif;}
+  .stat span{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
+
+  .group-section{margin-bottom:30px; scroll-margin-top:96px;}
+  .group-head{display:flex; align-items:baseline; gap:10px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--navy); flex-wrap:wrap;}
+  .group-head h2{font-size:17px; color:var(--navy);}
+  .group-head .count-badge{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--gold); background:#FBF4E2; border:1px solid #EFDBA0; padding:2px 8px; border-radius:20px;}
+  .group-admin-actions{margin-left:auto; display:flex; gap:6px;}
+  .icon-btn{
+    width:26px; height:26px; border-radius:6px; border:1px solid var(--line); background:#fff;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;
+    transition:border-color .15s, background .15s;
+  }
+  .icon-btn svg{width:13px;height:13px; stroke:var(--muted);}
+  .icon-btn:hover{border-color:var(--blue);}
+  .icon-btn:hover svg{stroke:var(--blue);}
+  .icon-btn.danger:hover{border-color:var(--danger); background:#FBF1F0;}
+  .icon-btn.danger:hover svg{stroke:var(--danger);}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:14px;}
+  .person-card{
+    background:var(--card); border:1px solid var(--line); border-left:3px solid var(--blue);
+    border-radius:9px; padding:14px 16px; transition:box-shadow .15s, transform .15s; position:relative;
+  }
+  .person-card:hover{box-shadow:0 6px 18px rgba(11,42,67,.1); transform:translateY(-1px);}
+  .card-admin-actions{position:absolute; top:10px; right:10px; display:none; gap:5px;}
+  .person-card.admin-mode .card-admin-actions{display:flex;}
+  .person-card.admin-mode{padding-right:16px;}
+  .person-name{font-weight:600; font-size:14.5px; color:var(--ink); margin-bottom:3px; padding-right:0;}
+  .person-card.admin-mode .person-name{padding-right:56px;}
+  .person-name.vacant{color:var(--muted); font-style:italic; font-weight:500;}
+  .person-pos{font-size:12.3px; color:var(--muted); line-height:1.4; margin-bottom:10px; min-height:17px;}
+  .phone-list{display:flex; flex-direction:column; gap:5px;}
+  .phone-line{display:flex; align-items:center; gap:7px; font-family:'IBM Plex Mono', monospace; font-size:12.6px;}
+  .phone-line svg{width:13px;height:13px; flex-shrink:0;}
+  .phone-line.office svg{stroke:var(--gold);}
+  .phone-line.mobile svg{stroke:var(--blue);}
+  .phone-line a{text-decoration:none; color:var(--ink); border-bottom:1px dashed var(--line);}
+  .phone-line a:hover{color:var(--blue); border-color:var(--blue);}
+  .phone-tag{font-family:'IBM Plex Sans',sans-serif; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-right:2px;}
+
+  .add-person-card{
+    border:1.5px dashed var(--line); border-radius:9px; display:none;
+    align-items:center; justify-content:center; min-height:100px; cursor:pointer; color:var(--muted);
+    font-size:12.8px; gap:8px; transition:border-color .15s, color .15s;
+  }
+  .add-person-card.visible{display:flex;}
+  .add-person-card:hover{border-color:var(--blue); color:var(--blue);}
+  .add-person-card svg{width:16px;height:16px; stroke:currentColor;}
+
+  .add-group-btn{
+    display:none; align-items:center; gap:8px; justify-content:center;
+    width:100%; padding:14px; border:1.5px dashed var(--line); border-radius:var(--radius);
+    background:transparent; color:var(--muted); cursor:pointer; font-size:13px; margin-top:6px;
+  }
+  .add-group-btn.visible{display:flex;}
+  .add-group-btn:hover{border-color:var(--blue); color:var(--blue);}
+  .add-group-btn svg{width:15px;height:15px;stroke:currentColor;}
+
+  .map-section{
+    margin-bottom:30px;
+    scroll-margin-top:96px;
+  }
+  .map-wrap{
+    display:grid;
+    grid-template-columns:1.6fr 1fr;
+    gap:16px;
+  }
+  .map-embed{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    min-height:340px;
+  }
+  .map-embed iframe{
+    width:100%; height:100%; min-height:340px; border:0; display:block;
+  }
+  .map-links{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .map-link-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:9px;
+    padding:14px 16px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:box-shadow .15s, transform .15s;
+  }
+  .map-link-card:hover{ box-shadow:0 6px 18px rgba(11,42,67,.1); transform:translateY(-1px); }
+  .map-link-icon{
+    width:34px; height:34px; border-radius:8px; background:var(--blue-dim);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .map-link-icon svg{ width:18px; height:18px; stroke:var(--blue); }
+  .map-link-title{ font-weight:600; font-size:13.6px; }
+  .map-link-sub{ font-size:11.8px; color:var(--muted); margin-top:1px; }
+  .map-note{ font-size:11.8px; color:var(--muted); line-height:1.5; margin:2px 4px 0; }
+  @media (max-width: 760px){
+    .map-wrap{ grid-template-columns:1fr; }
+    .map-embed{ min-height:260px; }
+    .map-embed iframe{ min-height:260px; }
+  }
+
+  .no-results{text-align:center; padding:60px 20px; color:var(--muted);}
+  .no-results svg{width:40px;height:40px;stroke:var(--line); margin-bottom:12px;}
+
+  footer{text-align:center; padding:26px 20px 40px; font-size:12px; color:var(--muted);}
+
+  /* ===== Modal ===== */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(11,26,42,.55); z-index:200;
+    display:none; align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.visible{display:flex;}
+  .modal-box{
+    background:#fff; border-radius:12px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal-head{
+    padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-head h3{font-size:16px; color:var(--navy);}
+  .modal-close{background:none; border:none; cursor:pointer; color:var(--muted); font-size:20px; line-height:1; padding:4px;}
+  .modal-body{padding:18px 20px;}
+  .form-field{margin-bottom:14px;}
+  .form-field label{display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:5px; font-family:'IBM Plex Mono',monospace;}
+  .form-field input, .form-field textarea{
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:7px; font-size:13.6px;
+    font-family:'IBM Plex Sans',sans-serif; outline:none; color:var(--ink); resize:vertical;
+  }
+  .form-field input:focus, .form-field textarea:focus{border-color:var(--blue);}
+  .form-field .hint{font-size:11px; color:var(--muted); margin-top:4px;}
+  .form-actions{display:flex; gap:10px; margin-top:18px;}
+  .btn{
+    flex:1; padding:10px 14px; border-radius:8px; border:none; font-size:13.6px; cursor:pointer; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-primary:hover{background:var(--navy-2);}
+  .btn-secondary{background:var(--bg); color:var(--ink); border:1px solid var(--line);}
+  .btn-secondary:hover{border-color:var(--muted);}
+  .btn-danger{background:#fff; color:var(--danger); border:1px solid #f0d3d0;}
+  .btn-danger:hover{background:#FBF1F0;}
+  .modal-error{color:var(--danger); font-size:12.6px; margin-top:8px; display:none;}
+  .modal-error.visible{display:block;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--navy); color:#fff; padding:11px 20px; border-radius:8px; font-size:13px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25); z-index:300; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none;
+  }
+  .toast.visible{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .sidebar-toggle{display:none;}
+  @media (max-width: 900px){
+    .layout{grid-template-columns:1fr; padding:18px 14px 60px;}
+    .sidebar{position:static; order:2;}
+    .header-search{max-width:none; flex-basis:100%; order:3;}
+    .admin-toggle{order:4;}
+    .brand-sub{display:none;}
+    .cards{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="Логотип ТОО ВЖДО">
+      <div class="brand-text">
+        <div class="brand-eyebrow">ТОО «ВЖДО»</div>
+        <div class="brand-title">Атырауский филиал</div>
+        <div class="brand-sub">Телефонный справочник сотрудников</div>
+      </div>
+    </div>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" placeholder="Поиск: имя, должность, телефон, отдел…">
+      <span class="search-count" id="searchCount"></span>
+    </div>
+    <button class="admin-toggle" id="adminToggleBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span id="adminToggleLabel">Вход для администратора</span>
+    </button>
+  </div>
+  <div class="rail-divider"></div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="side-card">
+      <h3>Разделы</h3>
+      <ul class="nav-list" id="navList"></ul>
+    </nav>
+
+    <div class="contact-card">
+      <h3>Контакты филиала</h3>
+      <div class="contact-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span><b>г. Атырау</b>, мкр. Береке, проезд 1, д. 2<br>ул. Контейнерная, 2 · индекс 060008</span>
+      </div>
+      <div class="contact-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92Z"/></svg>
+        <span>Приёмная: <b>8 (7122) 95-51-32</b><br>Код: <b>8 7122 (95-51-00)</b></span>
+      </div>
+      <span class="contact-code">Код филиала: НОР-5</span>
+    </div>
+
+    <div class="admin-panel" id="adminPanel">
+      <h3>Панель администратора</h3>
+      <button class="side-action" id="addGroupSideBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Добавить подразделение
+      </button>
+      <button class="side-action" id="changePasswordBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        Сменить пароль
+      </button>
+      <button class="side-action" id="exportDataBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Скачать data.json
+      </button>
+      <button class="side-action" id="importDataBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        Загрузить data.json
+      </button>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+      <button class="side-action logout-btn" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Выйти из режима
+      </button>
+      <div class="storage-warning" id="storageWarning">
+        Хранилище Claude здесь недоступно (сайт открыт вне Claude). Чтобы изменения увидели <b>все</b> посетители сайта: отредактируйте данные, нажмите «Скачать data.json», затем загрузите этот файл на сервер рядом с index.html, заменив старый. При следующем открытии страницы все увидят обновлённые данные.
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="page-intro">
+      <h1>Справочник контактов</h1>
+      <p>Служебные и мобильные телефоны руководства, отделов и стрелковых команд Атырауского филиала ТОО «ВЖДО». Используйте поиск сверху, чтобы быстро найти сотрудника по фамилии, должности, отделу или номеру телефона.</p>
+      <div class="jump-nav">
+        <label for="jumpSelect">Перейти к разделу:</label>
+        <select id="jumpSelect">
+          <option value="">— выберите раздел —</option>
+        </select>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b id="statPeople">0</b><span>сотрудников</span></div>
+        <div class="stat"><b id="statGroups">0</b><span>подразделений</span></div>
+        <div class="stat"><b>060008</b><span>почтовый индекс</span></div>
+      </div>
+    </div>
+
+    <div class="map-card">
+      <div class="map-card-head">
+        <h2>Карта охвата: Атырауская и Мангистауская область</h2>
+      </div>
+      <p>На карте отмечены штаб, стрелковые команды, стрелковые группы, посты на мостах и портовые подразделения филиала с точными адресами — от Атырау и Ганюшкино на севере до Актау-порта и Курык-порта на юге, на побережье Каспия.</p>
+      <div class="map-frame-wrap">
+        <div id="leafletMap"></div>
+      </div>
+      <div class="map-legend" id="mapLegend"></div>
+      <div class="map-links">
+        <a href="https://www.google.com/maps/place/Атырауская+область" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Атырауская область в Google Картах
+        </a>
+        <a href="https://www.google.com/maps/place/Мангистауская+область" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Мангистауская область в Google Картах
+        </a>
+      </div>
+    </div>
+
+    <div id="groupsContainer"></div>
+
+    <section class="map-section" id="mapSection">
+      <div class="group-head" style="border-bottom-color:var(--gold);">
+        <h2>Карта региона</h2>
+      </div>
+      <div class="map-wrap">
+        <div class="map-embed">
+          <iframe
+            title="Карта Атырауской и Мангистауской областей"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=47.5%2C41.8%2C55.5%2C48.8&amp;layer=mapnik&amp;marker=47.1164%2C51.8792"
+            loading="lazy">
+          </iframe>
+        </div>
+        <div class="map-links">
+          <a class="map-link-card" href="https://2gis.kz/atyrau/geo/11822966929096712" target="_blank" rel="noopener">
+            <div class="map-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div>
+              <div class="map-link-title">Атырауская область</div>
+              <div class="map-link-sub">Открыть подробную карту в 2ГИС ↗</div>
+            </div>
+          </a>
+          <a class="map-link-card" href="https://2gis.kz/aktau/geo/11822966929096719" target="_blank" rel="noopener">
+            <div class="map-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div>
+              <div class="map-link-title">Мангистауская область</div>
+              <div class="map-link-sub">Открыть подробную карту в 2ГИС ↗</div>
+            </div>
+          </a>
+          <p class="map-note">Встроенная карта показывает расположение обоих регионов. Для организаций, адресов и маршрутов внутри области — переходите в 2ГИС по кнопкам выше.</p>
+        </div>
+      </div>
+    </section>
+
+    <button class="add-group-btn" id="addGroupBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Добавить новое подразделение
+    </button>
+
+    <div class="no-results" id="noResults" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg>
+      <div>Ничего не найдено. Попробуйте другой запрос.</div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  Атырауский филиал ТОО «ВЖДО» · Справочник по состоянию на 18.09.2025 · создано на основе внутреннего файла-справочника
+</footer>
+
+<!-- Login modal -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Вход для администратора</h3><button class="modal-close" data-close="loginModal">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Пароль</label>
+        <input type="password" id="loginPasswordInput" placeholder="Введите пароль">
+      </div>
+      <div class="modal-error" id="loginError">Неверный пароль. Попробуйте ещё раз.</div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" data-close="loginModal">Отмена</button>
+        <button class="btn btn-primary" id="loginSubmitBtn">Войти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Сменить пароль администратора</h3><button class="modal-close" data-close="passwordModal">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Новый пароль</label>
+        <input type="password" id="newPasswordInput" placeholder="Новый пароль">
+        <div class="hint">Этот пароль понадобится для входа в режим администратора всем, у кого есть доступ к сайту.</div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" data-close="passwordModal">Отмена</button>
+        <button class="btn btn-primary" id="savePasswordBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Person edit/add modal -->
+<div class="modal-overlay" id="personModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="personModalTitle">Сотрудник</h3><button class="modal-close" data-close="personModal">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Ф.И.О.</label>
+        <input type="text" id="personNameInput" placeholder="Фамилия Имя Отчество">
+      </div>
+      <div class="form-field">
+        <label>Должность</label>
+        <input type="text" id="personPositionInput" placeholder="Занимаемая должность">
+      </div>
+      <div class="form-field">
+        <label>Служебные телефоны</label>
+        <textarea id="personOfficeInput" rows="2" placeholder="Каждый номер с новой строки"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Мобильные телефоны</label>
+        <textarea id="personMobileInput" rows="2" placeholder="Каждый номер с новой строки"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-danger" id="deletePersonBtn" style="display:none;">Удалить</button>
+        <button class="btn btn-primary" id="savePersonBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Group edit/add modal -->
+<div class="modal-overlay" id="groupModal">
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="groupModalTitle">Подразделение</h3><button class="modal-close" data-close="groupModal">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Название подразделения</label>
+        <input type="text" id="groupTitleInput" placeholder="Например: Отдел кадров">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-danger" id="deleteGroupBtn" style="display:none;">Удалить подразделение</button>
+        <button class="btn btn-primary" id="saveGroupBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_DATA = {"header": ["Атырауский филиал ТОО ВЖДО код  8 (7122) 95 51 32\n  8 7122 (95-51-32) ул. Контейнерная 2 ИНДЕКС 060008", "г.Атырау мкр.Береке проезд 1, д2 индекс 060008", "НОР-5"], "groups": [{"title": "Руководство филиала", "people": [{"position": "Директор", "name": "Ербулеков Серик Кабашевич", "phones_office": ["95-51-00"], "phones_mobile": ["8 771 260 50 11", "8 701 383 91 41"], "birth": "30.04.1970", "id": "p1"}, {"position": "Заместитель директора", "name": "Абдрахманов Жанибек Кадыргалиевич", "phones_office": ["95-51-01"], "phones_mobile": ["8 701 374 06 36", "8 771 260 50 59"], "birth": "22.12.1971", "id": "p2"}, {"position": "Заместитель директора по Мангистаускому региону-начальник стрелковой команды на станции Мангистау", "name": "Омаркулов Бахыт Бакирович", "phones_office": ["8 (7292) 46-23-01"], "phones_mobile": ["8 701 340 43 56", "8 771 260 51 03"], "birth": "09.07.1964", "id": "p3"}, {"position": "Главный бухгалтер", "name": "Мырзагалиева Дарига Жумекеевна", "phones_office": ["95-51-83"], "phones_mobile": ["8 775 802 07 06", "8 771 260 50 39"], "birth": "06.07.1966", "id": "p4"}, {"position": "Председатель профсоюза", "name": "Шунаев Гайни Нурумович", "phones_office": ["95-51-04"], "phones_mobile": ["8 701 338 85 48"], "birth": "30.11.1962", "id": "p5"}], "id": "g1-руководство-филиала"}, {"title": "Отдел организации военизированной охраны", "people": [{"position": "Начальник отдела", "name": "Бисенов Серик Саудубаевич", "phones_office": ["95-53-74"], "phones_mobile": ["8702 316 77 24"], "birth": "08.11.1974", "id": "p6"}, {"position": "Специалист 1 категории инженер", "name": "Жубашев Руслан Гилатович", "phones_office": ["95-53-75"], "phones_mobile": ["8 776 089 03 89"], "birth": "03.09.1989", "id": "p7"}, {"position": "Специалист 1 категории инженер", "name": "Мухатчиев Айбар Айболатович", "phones_office": ["95-53-75"], "phones_mobile": ["8 775 629 10 94"], "birth": "04.06.1989", "id": "p8"}], "id": "g2-отдел-организации-воениз"}, {"title": "Отдел финансов, бухгалтерского и налогового учета", "people": [{"position": "Начальник отдела", "name": "Джанглышева Жанаргуль Тулеушовна", "phones_office": ["95-53-77"], "phones_mobile": ["8 705 440 06 55", "8 775 802 07 06"], "birth": "14.03.1978", "id": "p9"}, {"position": "Специалист 1 категории - бухгалтер", "name": "Ажибаева Дина Харипуллаевна", "phones_office": ["95-53-77"], "phones_mobile": ["8 702 479 95 44"], "birth": "19.12.1977", "id": "p10"}, {"position": "Специалист 1 категории - бухгалтер", "name": "Нурманова Кунсулу Кумаровна", "phones_office": ["95-53-77"], "phones_mobile": ["8 701 562 34 20"], "birth": "05.12.1976", "id": "p11"}, {"position": "Специалист 1 категории - бухгалтер", "name": "Кусайнова Аксункар Болатовна", "phones_office": ["95-53-77"], "phones_mobile": ["8 778 221 86 97"], "birth": "21.12.1997", "id": "p12"}], "id": "g3-отдел-финансов-бухгалтер"}, {"title": "Отдел по работе с персоналом", "people": [{"position": "Начальник отдела", "name": "Самаликова Анар Избасаровна", "phones_office": ["95-53-04"], "phones_mobile": ["8 701 243 04 16", "8 771 260 51 50"], "birth": "26.02.1973", "id": "p13"}, {"position": "Специалист 1 категории", "name": "Исмагулова Айгуль Рабаевна", "phones_office": ["95-53-04"], "phones_mobile": ["8 701 903 29 18"], "birth": "15.09.1987", "id": "p14"}, {"position": "Специалист 1 категории", "name": "Сайфеденова Арайлым Сериковна", "phones_office": ["95-53-04"], "phones_mobile": ["8 702 415 70 89"], "birth": "03.05.1989", "id": "p15"}, {"position": "Специалист 1 категории", "name": "Уалихан Жадыра Уалиханқызы", "phones_office": ["95-53-04"], "phones_mobile": ["8 775 919 34 19"], "birth": "25.11.1991", "id": "p16"}], "id": "g4-отдел-по-работе-с-персон"}, {"title": "Приписной штат", "people": [{"position": "Специалист 1 категории по материально-техническому обеспечению", "name": "Паритова Мира Куанышевна", "phones_office": ["95-53-05"], "phones_mobile": ["8 775 880 77 09"], "birth": "09.06.1990", "id": "p17"}, {"position": "Специалист 1 категории по материально-техническому обеспечению", "name": "Аубакирова Индира Абаевна", "phones_office": ["95-53-05"], "phones_mobile": ["8 775 802 71 07"], "birth": "06.05.1984", "id": "p18"}, {"position": "Специалист 1 категории инженер", "name": "Баймурзиев Асхат Маратович", "phones_office": ["95-53-75"], "phones_mobile": ["8 701 403 89 04", "8 771 260 51 04"], "birth": "23.03.1983", "id": "p19"}, {"position": "Юрисконсульт", "name": "Дюсембиев Нурлан Шапаевич", "phones_office": ["95-51-04"], "phones_mobile": ["8 775 962 17 91"], "birth": "22.11.1973", "id": "p20"}, {"position": "Специалист 1 категории по безопасности и охране труда СК на ст.Атырау", "name": "Рахимгалиев Ерлан Нурланович", "phones_office": ["95-53-49"], "phones_mobile": ["8 775 887 80 16", "8 771 260 51 16"], "birth": "28.11.1992", "id": "p21"}, {"position": "Специалист 1 категории-инженер информационных систем в СК на ст.Атырау", "name": "Кушкалиев Беймбет Муратович", "phones_office": ["95-51-32"], "phones_mobile": ["8 701 151 90 73"], "birth": "03.04.1987", "id": "p22"}, {"position": "Специалист 1 категории по безопасности и охране труда СК на ст.Атырау", "name": "Джалмагамбетова Гульнар Аиповна", "phones_office": ["95-53-49"], "phones_mobile": ["8 701 550 86 48"], "birth": "08.01.1973", "id": "p23"}, {"position": "Экономист филиала", "name": "Татикова Асель Орынбасаровна", "phones_office": ["95-53-77"], "phones_mobile": ["8 775 221 69 91"], "birth": "12.12.1991", "id": "p24"}, {"position": "Диспетчер", "name": "Сменные работники", "phones_office": ["95-53-78"], "phones_mobile": ["8 771 260 50 44"], "birth": "", "id": "p25"}], "id": "g5-приписной-штат"}, {"title": "Стрелковая команда на станции Сагиз", "people": [{"position": "Начальник стрелковой команды", "name": "Нурсултанов Ерик Искендрович", "phones_office": ["871238 7-18-67"], "phones_mobile": ["8 775 608 67 67"], "birth": "06.08.1967", "id": "p26"}, {"position": "Заместитель начальника стрелковой команды", "name": "Адайбаев Калыбек Сагидоллаевич", "phones_office": ["871238 7-18-67"], "phones_mobile": ["8 777 260 51 20", "8 701 663 11 92"], "birth": "11.09.1970", "id": "p27"}], "id": "g6-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда на станции Макат", "people": [{"position": "Начальник стрелковой команды", "name": "Даулетов Талгат Жайсанович", "phones_office": ["871239 3-19-55"], "phones_mobile": ["8 701 419 97 84", "8 771 260 52 19"], "birth": "22.03.1964", "id": "p28"}, {"position": "Заместитель начальника стрелковой команды", "name": "Мукашев Бауыржан Сагынбаевич", "phones_office": ["871239 3-06-46"], "phones_mobile": ["8 775 824 78 65"], "birth": "10.02.1965", "id": "p29"}, {"position": "табельщик", "name": "Ергалиева Нуржамал Женисовна", "phones_office": [], "phones_mobile": ["8 701 605 11 71"], "birth": "11.09.1971", "id": "p30"}], "id": "g7-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда на станции Бейнеу", "people": [{"position": "Начальник стрелковой команды", "name": "Сарсенов Нурбол Таганович", "phones_office": ["872932 61- 2-37"], "phones_mobile": ["8 771 260 50 98"], "birth": "07.09.1978", "id": "p31"}, {"position": "Заместитель начальника команды", "name": "Джолдасбаев Асылбек", "phones_office": ["872932 61- 2-37"], "phones_mobile": ["8 771 838 92 92"], "birth": "06.11.1992", "id": "p32"}], "id": "g8-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда на станции Мангистау", "people": [{"position": "Заместитель начальника стрелковой команды", "name": "Жумашев Нурлыбай Жаякбаевич", "phones_office": ["8 7292 46-23-01"], "phones_mobile": ["8 771 260 51 64"], "birth": "30.03.1968", "id": "p33"}], "id": "g9-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда на станции Атырау", "people": [{"position": "Начальник стрелковой команды", "name": "(вакансия)", "phones_office": ["95-53-76"], "phones_mobile": ["8 778 648 81 85"], "birth": "11.01.1972", "id": "p34"}, {"position": "Заместитель начальника стрелковой команды", "name": "Мырзагельдиев Сериккали Тыныштыкулы", "phones_office": ["95-53-76"], "phones_mobile": ["8 778 663 99 59", "8 771 260 50 42"], "birth": "16.01.1971", "id": "p35"}], "id": "g10-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда на станции Ганюшкино", "people": [{"position": "Начальник стрелковой команды", "name": "Кайров Калыбай Бигалиевич", "phones_office": ["8 712 339 24 72"], "phones_mobile": ["8 778 510 33 39", "8 771 260 50 60"], "birth": "06.08.1976", "id": "p36"}, {"position": "Заместитель начальника стрелковой команды", "name": "Алипов Шами Сахташевич", "phones_office": ["8 712 339 24 72"], "phones_mobile": ["8 702 615 42 15"], "birth": "10.12.1970", "id": "p37"}], "id": "g11-стрелковая-команда-на-ст"}, {"title": "Стрелковая команда Актау-порт", "people": [{"position": "Начальник стрелковой команды", "name": "Абуов Бактияр Заидинович", "phones_office": [], "phones_mobile": ["8702 755 70 01"], "birth": "18.03.1978", "id": "p38"}, {"position": "Заместитель начальника стрелковой команды", "name": "Омаркулов Марат Бакирович", "phones_office": [], "phones_mobile": ["8775 381 02 46"], "birth": "05.02.1977", "id": "p39"}], "id": "g12-стрелковая-команда-актау"}, {"title": "Стрелковая команда Курык-порт", "people": [{"position": "Начальник стрелковой команды", "name": "Сейтмагамбетов Амантай Отегенович", "phones_office": [], "phones_mobile": ["8776 520 19 73"], "birth": "27.04.1973", "id": "p40"}, {"position": "Заместитель начальника стрелковой команды", "name": "Бащиев Фазылбек Агзамович", "phones_office": [], "phones_mobile": ["8 775 790 14 73"], "birth": "30.06.1994", "id": "p41"}], "id": "g13-стрелковая-команда-курык"}, {"title": "Стрелковые группы", "people": [{"position": "Начальник СК на ст.Макат СГ на ст.Кульсары", "name": "Сейткалиев Кайрат Жумажанович", "phones_office": ["8(71237)62118"], "phones_mobile": ["8 778 934 32 65", "8 771 260 52 07"], "birth": "18.07.1965", "id": "p42"}, {"position": "Начальник СГ на ст.Узень СК на ст.Мангистау", "name": "Кадырбаев Дима Таласханович", "phones_office": [], "phones_mobile": ["8 771 260 51 95"], "birth": "15.12.1977", "id": "p43"}, {"position": "начальник СГ на ст.Сай-Утес СК на ст.Бейнеу", "name": "Кураков Ерлан Майранович", "phones_office": [], "phones_mobile": ["8775 237 58 58"], "birth": "27.11.1979", "id": "p44"}, {"position": "Заместитель начальник мобильная оперативная группа реагирования (МГОР) СК на ст Мангистау", "name": "Жалгасбаев Орынжан Арыстанович", "phones_office": [], "phones_mobile": ["8 701 252 51 56"], "birth": "29.07.1978", "id": "p45"}, {"position": "Начальник мобильной группы оперативного реагирования (МГОР) СК на ст. Атырау", "name": "Амиров Бекболат Гизатович", "phones_office": [], "phones_mobile": ["8 701 341 37 90"], "birth": "12.11.1977", "id": "p46"}], "id": "g14-стрелковые-группы"}]};
+const DEFAULT_PASSWORD = "atyrau2026";
+
+const MARKERS = [{"id": "m1", "category": "Штаб", "name": "Штаб", "address": "г..Атырау, мкр. Береке, проезд 1, д. 2,", "lat": 47.131291, "lng": 51.958927}, {"id": "m2", "category": "СК", "name": "СК Макат", "address": "Атырауская обл. Макатский р-н. ст.Макат. мкр.Алаш 101", "lat": 47.644533, "lng": 53.34687}, {"id": "m3", "category": "СК", "name": "СК Сагиз", "address": "Атырауская обл. Кызылкогинский р-н ст.Сагиз, ул.Бейбарыс д.2", "lat": 48.235548, "lng": 54.883484}, {"id": "m4", "category": "СК", "name": "СК Ганюшкино", "address": "Атырауская обл. Курмангазинский район, п.Акколь, ул.Иманова д.7", "lat": 46.660171, "lng": 49.044428}, {"id": "m5", "category": "СГ", "name": "СГ Кульсары", "address": "Атырауская обл. Жылойский р-н ст.Кульсары. ул.Қожа Ахмет Иассауи 29а", "lat": 46.939809, "lng": 53.944848}, {"id": "m6", "category": "СК", "name": "СК Бейнеу", "address": "Мангистауская обл. ст.Бейнеу. ул.Акшабайулы 9", "lat": 45.319185, "lng": 55.196709}, {"id": "m7", "category": "СК", "name": "СК Мангышлак", "address": "Мангистауская обл. Мунайлинский район село Мангистау, №19 квартал, 4/6", "lat": 43.698625, "lng": 51.306779}, {"id": "m8", "category": "СК", "name": "СК Атырау", "address": "г..Атырау, мкр. Береке, проезд 1, д. 2,", "lat": 47.131225, "lng": 51.958983}, {"id": "m9", "category": "СГ", "name": "СГ Узень", "address": "Мангистауская обл. Каракиянский район г.Жанаозен", "lat": 43.32135, "lng": 52.854841}, {"id": "m10", "category": "СГ", "name": "СГ Болашак", "address": "Мангистауская обл. Каракиянский район ст.Болашак", "lat": 42.329139, "lng": 53.680477}, {"id": "m11", "category": "СГ", "name": "СГ Сай-Утес", "address": "Мангистауская обл. Бейнеуская обл ст.Сай-Утес ул.Привокзальная", "lat": 44.330118, "lng": 53.532526}, {"id": "m12", "category": "Мост", "name": "СК мост через реку Урал", "address": "Железнодорожный мост через реку «Урал» расположен: на 323 км. ПК 9+48 на перегоне ст. Атырау – ст. Махамбет", "lat": 47.14364, "lng": 51.932008}, {"id": "m13", "category": "Мост", "name": "СК мост через реку Соколок", "address": "Железнодорожный мост через реку «Соколок» расположенного на 499км. ПК 9+83 участка Атырау - Макат", "lat": 47.189688, "lng": 52.125671}, {"id": "m14", "category": "Порт", "name": "порт Курык", "address": "​Участок Сарша, строение 636, с. Курык, Каракиянский район, Мангистауская область", "lat": 43.164699, "lng": 51.441781}, {"id": "m15", "category": "Порт", "name": "порт Актау", "address": "Мангистауская обл., г.Актау, пром. зона Морской торговый порт №1", "lat": 43.602605, "lng": 51.220818}];
+const CATEGORY_COLORS = {
+  'Штаб': '#A6862C',
+  'СК': '#1D96D4',
+  'СГ': '#2E9E6B',
+  'Порт': '#7E57C2',
+  'Мост': '#C1443A',
+  'Объект': '#5E6C7C'
+};
+
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let ADMIN_PASSWORD = DEFAULT_PASSWORD;
+let isAdmin = false;
+function hasStorage(){
+  return !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
+}
+
+let editingPersonId = null;
+let editingGroupId = null;
+let addPersonTargetGroupId = null;
+
+const phoneIconOffice = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><rect x="9" y="6" width="6" height="8" rx="1"/></svg>';
+const phoneIconMobile = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>';
+const editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const trashIcon = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>';
+const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+
+function telHref(num){ return 'tel:+7' + num.replace(/[^0-9]/g,'').replace(/^8/,''); }
+function slugify(s){ return s.toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'-').replace(/^-+|-+$/g,''); }
+function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('visible'), 2600);
+}
+
+function openModal(id){ document.getElementById(id).classList.add('visible'); }
+function closeModal(id){ document.getElementById(id).classList.remove('visible'); }
+document.querySelectorAll('[data-close]').forEach(el=>{
+  el.addEventListener('click', ()=>closeModal(el.dataset.close));
+});
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) closeModal(ov.id); });
+});
+
+// ===== persistence =====
+// Priority: 1) Claude artifact storage (only works inside claude.ai)
+//           2) external data.json next to this file (works on real hosting)
+//           3) embedded default data baked into this HTML
+async function loadFromStorage(){
+  if(hasStorage()){
+    try{
+      const res = await window.storage.get('directory-data', true);
+      if(res && res.value){ DATA = JSON.parse(res.value); }
+    }catch(e){ /* key not found yet, keep defaults */ }
+    try{
+      const resP = await window.storage.get('directory-password', true);
+      if(resP && resP.value){ ADMIN_PASSWORD = resP.value; }
+    }catch(e){ /* no custom password set yet */ }
+    return;
+  }
+  // Not running inside Claude — try to load data.json from the same folder.
+  try{
+    const resp = await fetch('./data.json?_=' + Date.now());
+    if(resp.ok){
+      const json = await resp.json();
+      if(json && json.groups){ DATA = json; }
+    }
+  }catch(e){ /* no data.json present (e.g. opened as a local file://) — keep embedded default */ }
+  document.getElementById('storageWarning').classList.add('visible');
+}
+
+async function saveData(){
+  if(hasStorage()){
+    const payload = JSON.stringify(DATA);
+    try{
+      const result = await window.storage.set('directory-data', payload, true);
+      if(!result){
+        showToast('⚠ Не удалось сохранить — попробуйте ещё раз');
+        return false;
+      }
+      // verify the write actually landed, so a silent failure never looks like success
+      const check = await window.storage.get('directory-data', true);
+      if(!check || check.value !== payload){
+        showToast('⚠ Сохранение не подтвердилось — проверьте соединение и повторите');
+        return false;
+      }
+      return true;
+    }catch(e){
+      console.error('Storage error', e);
+      showToast('⚠ Ошибка сохранения хранилища Claude');
+      return false;
+    }
+  }
+  // Standalone hosting: there is no server to write to from the browser.
+  // Changes stay in this tab only until the admin exports & re-uploads data.json.
+  showToast('Сохранено в этой вкладке — скачайте data.json и загрузите на сервер');
+  return false;
+}
+
+async function savePassword(){
+  if(!hasStorage()){
+    showToast('Новый пароль действует в этой вкладке — сохраните его через «Скачать data.json»');
+    return false;
+  }
+  try{
+    await window.storage.set('directory-password', ADMIN_PASSWORD, true);
+    return true;
+  }catch(e){
+    console.error(e);
+    showToast('⚠ Не удалось сохранить новый пароль');
+    return false;
+  }
+}
+
+// ===== render =====
+function personCard(p, groupId){
+  const vacant = !p.name || p.name === '(вакансия)';
+  const searchBlob = [p.name, p.position, ...(p.phones_office||[]), ...(p.phones_mobile||[])].join(' ').toLowerCase();
+  let phonesHtml = '';
+  (p.phones_office||[]).forEach(num=>{
+    phonesHtml += `<div class="phone-line office">${phoneIconOffice}<span class="phone-tag">раб.</span><a href="${telHref(num)}">${esc(num)}</a></div>`;
+  });
+  (p.phones_mobile||[]).forEach(num=>{
+    phonesHtml += `<div class="phone-line mobile">${phoneIconMobile}<span class="phone-tag">моб.</span><a href="${telHref(num)}">${esc(num)}</a></div>`;
+  });
+  if(!phonesHtml){ phonesHtml = '<div class="phone-line" style="color:var(--muted)">— нет телефона —</div>'; }
+  return `<div class="person-card ${isAdmin?'admin-mode':''}" data-search="${esc(searchBlob)}" data-person-id="${p.id}" data-group-id="${groupId}">
+      <div class="card-admin-actions">
+        <button class="icon-btn edit-person-btn" data-person-id="${p.id}" data-group-id="${groupId}" title="Редактировать">${editIcon}</button>
+        <button class="icon-btn danger delete-person-btn" data-person-id="${p.id}" data-group-id="${groupId}" title="Удалить">${trashIcon}</button>
+      </div>
+      <div class="person-name ${vacant?'vacant':''}">${esc(p.name) || '(вакансия)'}</div>
+      <div class="person-pos">${esc(p.position) || ''}</div>
+      <div class="phone-list">${phonesHtml}</div>
+    </div>`;
+}
+
+function render(){
+  const container = document.getElementById('groupsContainer');
+  const navList = document.getElementById('navList');
+  let totalPeople = 0;
+  let navHtml = `<li><a href="#mapSection" class="nav-link" data-target="mapSection"><span class="nav-dot" style="background:var(--blue);"></span><span>Карта региона</span></a></li>`;
+  let groupsHtml = '';
+
+  DATA.groups.forEach((g)=>{
+    totalPeople += g.people.length;
+    navHtml += `<li><a href="#${g.id}" class="nav-link" data-target="${g.id}"><span class="nav-dot"></span><span>${esc(g.title)}</span><span class="nav-count">${g.people.length}</span></a></li>`;
+    const cardsHtml = g.people.map(p=>personCard(p, g.id)).join('');
+    groupsHtml += `<section class="group-section" id="${g.id}" data-title="${esc(g.title.toLowerCase())}" data-group-id="${g.id}">
+        <div class="group-head">
+          <h2>${esc(g.title)}</h2>
+          <span class="count-badge">${g.people.length} чел.</span>
+          <div class="group-admin-actions" style="${isAdmin?'':'display:none;'}">
+            <button class="icon-btn edit-group-btn" data-group-id="${g.id}" title="Переименовать">${editIcon}</button>
+            <button class="icon-btn danger delete-group-btn" data-group-id="${g.id}" title="Удалить подразделение">${trashIcon}</button>
+          </div>
+        </div>
+        <div class="cards">
+          ${cardsHtml}
+          <div class="add-person-card ${isAdmin?'visible':''}" data-add-to="${g.id}">${plusIcon} Добавить сотрудника</div>
+        </div>
+      </section>`;
+  });
+
+  navList.innerHTML = navHtml;
+  container.innerHTML = groupsHtml;
+  document.getElementById('statPeople').textContent = totalPeople;
+  document.getElementById('statGroups').textContent = DATA.groups.length;
+  document.getElementById('addGroupBtn').classList.toggle('visible', isAdmin);
+
+  populateJumpSelect();
+  attachCardEvents();
+  applySearchFilter();
+}
+
+function populateJumpSelect(){
+  const select = document.getElementById('jumpSelect');
+  const prevValue = select.value;
+  let opts = '<option value="">— выберите раздел —</option><option value="mapSection">Карта региона</option>';
+  DATA.groups.forEach(g=>{
+    opts += `<option value="${g.id}">${esc(g.title)} (${g.people.length})</option>`;
+  });
+  select.innerHTML = opts;
+  if(prevValue && DATA.groups.some(g=>g.id===prevValue)){ select.value = prevValue; }
+}
+
+function jumpToSection(id, highlight){
+  const el = document.getElementById(id);
+  if(!el) return;
+  // make sure it isn't hidden by an active search filter
+  const searchInput = document.getElementById('searchInput');
+  if(searchInput.value){ searchInput.value = ''; applySearchFilter(); }
+  el.scrollIntoView({ behavior:'smooth', block:'start' });
+  if(highlight){
+    el.style.transition = 'box-shadow .3s';
+    el.style.boxShadow = '0 0 0 3px var(--gold-light)';
+    el.style.borderRadius = '10px';
+    setTimeout(()=>{ el.style.boxShadow = ''; }, 1800);
+  }
+}
+
+document.getElementById('jumpSelect').addEventListener('change', (e)=>{
+  if(e.target.value) jumpToSection(e.target.value, false);
+});
+
+function attachCardEvents(){
+  document.querySelectorAll('.edit-person-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openPersonModal(btn.dataset.groupId, btn.dataset.personId);
+    });
+  });
+  document.querySelectorAll('.delete-person-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(confirm('Удалить этого сотрудника из справочника?')){
+        deletePerson(btn.dataset.groupId, btn.dataset.personId);
+      }
+    });
+  });
+  document.querySelectorAll('.add-person-card').forEach(el=>{
+    el.addEventListener('click', ()=> openPersonModal(el.dataset.addTo, null));
+  });
+  document.querySelectorAll('.edit-group-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openGroupModal(btn.dataset.groupId); });
+  });
+  document.querySelectorAll('.delete-group-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(confirm('Удалить подразделение и всех сотрудников внутри него?')){
+        deleteGroup(btn.dataset.groupId);
+      }
+    });
+  });
+}
+
+// ===== person CRUD =====
+function openPersonModal(groupId, personId){
+  editingPersonId = personId;
+  addPersonTargetGroupId = groupId;
+  const isNew = !personId;
+  document.getElementById('personModalTitle').textContent = isNew ? 'Новый сотрудник' : 'Редактировать сотрудника';
+  document.getElementById('deletePersonBtn').style.display = isNew ? 'none' : 'flex';
+  if(isNew){
+    document.getElementById('personNameInput').value = '';
+    document.getElementById('personPositionInput').value = '';
+    document.getElementById('personOfficeInput').value = '';
+    document.getElementById('personMobileInput').value = '';
+  } else {
+    const g = DATA.groups.find(g=>g.id===groupId);
+    const p = g.people.find(p=>p.id===personId);
+    document.getElementById('personNameInput').value = p.name === '(вакансия)' ? '' : p.name;
+    document.getElementById('personPositionInput').value = p.position || '';
+    document.getElementById('personOfficeInput').value = (p.phones_office||[]).join('\n');
+    document.getElementById('personMobileInput').value = (p.phones_mobile||[]).join('\n');
+  }
+  openModal('personModal');
+}
+
+document.getElementById('savePersonBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('personNameInput').value.trim() || '(вакансия)';
+  const position = document.getElementById('personPositionInput').value.trim();
+  const office = document.getElementById('personOfficeInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const mobile = document.getElementById('personMobileInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const g = DATA.groups.find(g=>g.id===addPersonTargetGroupId);
+  if(!g) return;
+  if(editingPersonId){
+    const p = g.people.find(p=>p.id===editingPersonId);
+    p.name = name; p.position = position; p.phones_office = office; p.phones_mobile = mobile;
+  } else {
+    g.people.push({ id: uid('p'), name, position, phones_office: office, phones_mobile: mobile, birth: '' });
+  }
+  const ok = await saveData();
+  closeModal('personModal');
+  render();
+  if(ok) showToast('Сохранено');
+});
+
+document.getElementById('deletePersonBtn').addEventListener('click', ()=>{
+  if(editingPersonId && confirm('Удалить этого сотрудника из справочника?')){
+    deletePerson(addPersonTargetGroupId, editingPersonId);
+    closeModal('personModal');
+  }
+});
+
+async function deletePerson(groupId, personId){
+  const g = DATA.groups.find(g=>g.id===groupId);
+  if(!g) return;
+  g.people = g.people.filter(p=>p.id!==personId);
+  const ok = await saveData();
+  render();
+  if(ok) showToast('Сотрудник удалён');
+}
+
+// ===== group CRUD =====
+function openGroupModal(groupId){
+  editingGroupId = groupId;
+  const isNew = !groupId;
+  document.getElementById('groupModalTitle').textContent = isNew ? 'Новое подразделение' : 'Переименовать подразделение';
+  document.getElementById('deleteGroupBtn').style.display = isNew ? 'none' : 'flex';
+  document.getElementById('groupTitleInput').value = isNew ? '' : (DATA.groups.find(g=>g.id===groupId)||{}).title || '';
+  openModal('groupModal');
+}
+
+document.getElementById('addGroupSideBtn').addEventListener('click', ()=>openGroupModal(null));
+document.getElementById('addGroupBtn').addEventListener('click', ()=>openGroupModal(null));
+
+document.getElementById('saveGroupBtn').addEventListener('click', async ()=>{
+  const title = document.getElementById('groupTitleInput').value.trim();
+  if(!title){ showToast('Введите название подразделения'); return; }
+  let newGroupId = null;
+  if(editingGroupId){
+    const g = DATA.groups.find(g=>g.id===editingGroupId);
+    g.title = title;
+  } else {
+    newGroupId = uid('g') + '-' + slugify(title).slice(0,20);
+    DATA.groups.push({ id: newGroupId, title, people: [] });
+  }
+  const ok = await saveData();
+  closeModal('groupModal');
+  render();
+  if(newGroupId){
+    if(ok) showToast('Раздел «' + title + '» добавлен и сохранён');
+    setTimeout(()=>jumpToSection(newGroupId, true), 150);
+  } else if(ok){
+    showToast('Сохранено');
+  }
+});
+
+document.getElementById('deleteGroupBtn').addEventListener('click', ()=>{
+  if(editingGroupId && confirm('Удалить подразделение и всех сотрудников внутри него?')){
+    deleteGroup(editingGroupId);
+    closeModal('groupModal');
+  }
+});
+
+async function deleteGroup(groupId){
+  DATA.groups = DATA.groups.filter(g=>g.id!==groupId);
+  const ok = await saveData();
+  render();
+  if(ok) showToast('Подразделение удалено');
+}
+
+// ===== admin auth =====
+const adminToggleBtn = document.getElementById('adminToggleBtn');
+const adminToggleLabel = document.getElementById('adminToggleLabel');
+const adminPanel = document.getElementById('adminPanel');
+
+function setAdminState(on){
+  isAdmin = on;
+  adminToggleBtn.classList.toggle('is-admin', on);
+  adminToggleLabel.textContent = on ? 'Режим администратора' : 'Вход для администратора';
+  adminPanel.classList.toggle('visible', on);
+  document.getElementById('storageWarning').classList.toggle('visible', on && !hasStorage());
+  render();
+}
+
+adminToggleBtn.addEventListener('click', ()=>{
+  if(isAdmin){ return; } // use panel logout button instead
+  document.getElementById('loginPasswordInput').value = '';
+  document.getElementById('loginError').classList.remove('visible');
+  openModal('loginModal');
+  setTimeout(()=>document.getElementById('loginPasswordInput').focus(), 50);
+});
+
+document.getElementById('loginSubmitBtn').addEventListener('click', tryLogin);
+document.getElementById('loginPasswordInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryLogin(); });
+
+function tryLogin(){
+  const val = document.getElementById('loginPasswordInput').value;
+  if(val === ADMIN_PASSWORD){
+    closeModal('loginModal');
+    setAdminState(true);
+    showToast('Вы вошли как администратор');
+  } else {
+    document.getElementById('loginError').classList.add('visible');
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  setAdminState(false);
+  showToast('Режим администратора выключен');
+});
+
+document.getElementById('changePasswordBtn').addEventListener('click', ()=>{
+  document.getElementById('newPasswordInput').value = '';
+  openModal('passwordModal');
+});
+
+// ===== export / import data.json (for sites hosted outside Claude) =====
+document.getElementById('exportDataBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast(hasStorage()
+    ? 'data.json скачан'
+    : 'data.json скачан — загрузите его на сервер рядом с index.html');
+});
+
+document.getElementById('importDataBtn').addEventListener('click', ()=>{
+  document.getElementById('importFileInput').click();
+});
+
+document.getElementById('importFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const json = JSON.parse(text);
+    if(!json || !Array.isArray(json.groups)) throw new Error('Неверный формат файла');
+    DATA = json;
+    await saveData();
+    render();
+    showToast('Данные загружены из файла');
+  }catch(err){
+    console.error(err);
+    showToast('⚠ Не удалось прочитать файл: проверьте, что это data.json из этого справочника');
+  }
+  e.target.value = '';
+});
+
+document.getElementById('savePasswordBtn').addEventListener('click', async ()=>{
+  const val = document.getElementById('newPasswordInput').value.trim();
+  if(!val){ showToast('Введите новый пароль'); return; }
+  ADMIN_PASSWORD = val;
+  const ok = await savePassword();
+  closeModal('passwordModal');
+  if(ok) showToast('Пароль обновлён');
+});
+
+// ===== search =====
+function applySearchFilter(){
+  const input = document.getElementById('searchInput');
+  const q = input.value.trim().toLowerCase();
+  const countEl = document.getElementById('searchCount');
+  const noResults = document.getElementById('noResults');
+  let visiblePeople = 0;
+  let anySectionVisible = false;
+  const sections = document.querySelectorAll('.group-section');
+  sections.forEach(sec=>{
+    let sectionMatches = 0;
+    const cards = sec.querySelectorAll('.person-card');
+    const groupTitleMatches = sec.dataset.title.includes(q);
+    cards.forEach(card=>{
+      const match = !q || groupTitleMatches || card.dataset.search.includes(q);
+      card.style.display = match ? '' : 'none';
+      if(match) sectionMatches++;
+    });
+    // A section with no people yet (freshly added) should still be visible
+    // when there's no active search, or when its own title matches the search.
+    const showSection = !q || groupTitleMatches || sectionMatches > 0 || cards.length === 0;
+    sec.style.display = showSection ? '' : 'none';
+    if(showSection) anySectionVisible = true;
+    visiblePeople += sectionMatches;
+  });
+  if(q){ countEl.style.display = 'block'; countEl.textContent = visiblePeople; }
+  else { countEl.style.display = 'none'; }
+  noResults.style.display = (!anySectionVisible) ? 'block' : 'none';
+}
+document.getElementById('searchInput').addEventListener('input', applySearchFilter);
+
+// ===== scroll spy =====
+function setupScrollSpy(){
+  window.addEventListener('scroll', ()=>{
+    let current = '';
+    document.querySelectorAll('.group-section').forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top <= 140) current = sec.id;
+    });
+    document.querySelectorAll('.nav-link').forEach(l=>{
+      l.classList.toggle('active', l.dataset.target === current);
+    });
+  }, {passive:true});
+}
+
+// ===== map =====
+function initMap(){
+  if(typeof L === 'undefined' || !document.getElementById('leafletMap')) return;
+  const map = L.map('leafletMap', { scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    maxZoom: 18
+  }).addTo(map);
+
+  const bounds = [];
+  MARKERS.forEach(m=>{
+    const color = CATEGORY_COLORS[m.category] || CATEGORY_COLORS['Объект'];
+    const icon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
+      iconSize: [16,16],
+      iconAnchor: [8,8],
+      popupAnchor: [0,-8]
+    });
+    const gmapsUrl = `https://www.google.com/maps?q=${m.lat},${m.lng}`;
+    const popupHtml = `<div class="popup-cat">${esc(m.category)}</div>
+      <div class="popup-name">${esc(m.name)}</div>
+      <div class="popup-addr">${esc(m.address)}</div>
+      <a class="popup-link" href="${gmapsUrl}" target="_blank" rel="noopener">Открыть в Google Картах →</a>`;
+    L.marker([m.lat, m.lng], { icon }).addTo(map).bindPopup(popupHtml);
+    bounds.push([m.lat, m.lng]);
+  });
+
+  if(bounds.length){
+    map.fitBounds(bounds, { padding: [28, 28] });
+  }
+  map.on('focus', ()=> map.scrollWheelZoom.enable());
+  map.on('blur', ()=> map.scrollWheelZoom.disable());
+
+  // legend
+  const legend = document.getElementById('mapLegend');
+  if(legend){
+    const seen = new Set(MARKERS.map(m=>m.category));
+    legend.innerHTML = [...seen].map(cat=>{
+      const color = CATEGORY_COLORS[cat] || CATEGORY_COLORS['Объект'];
+      return `<span class="legend-item"><span class="dot" style="background:${color}"></span>${esc(cat)}</span>`;
+    }).join('');
+  }
+
+  setTimeout(()=> map.invalidateSize(), 200);
+}
+
+// ===== init =====
+(async function init(){
+  await loadFromStorage();
+  render();
+  setupScrollSpy();
+  initMap();
+})();
+</script>
+
+</body>
+</html>
