@@ -252,6 +252,58 @@
   .add-group-btn:hover{border-color:var(--blue); color:var(--blue);}
   .add-group-btn svg{width:15px;height:15px;stroke:currentColor;}
 
+  .map-section{
+    margin-bottom:30px;
+    scroll-margin-top:96px;
+  }
+  .map-wrap{
+    display:grid;
+    grid-template-columns:1.6fr 1fr;
+    gap:16px;
+  }
+  .map-embed{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    min-height:340px;
+  }
+  .map-embed iframe{
+    width:100%; height:100%; min-height:340px; border:0; display:block;
+  }
+  .map-links{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .map-link-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:9px;
+    padding:14px 16px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:box-shadow .15s, transform .15s;
+  }
+  .map-link-card:hover{ box-shadow:0 6px 18px rgba(11,42,67,.1); transform:translateY(-1px); }
+  .map-link-icon{
+    width:34px; height:34px; border-radius:8px; background:var(--blue-dim);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .map-link-icon svg{ width:18px; height:18px; stroke:var(--blue); }
+  .map-link-title{ font-weight:600; font-size:13.6px; }
+  .map-link-sub{ font-size:11.8px; color:var(--muted); margin-top:1px; }
+  .map-note{ font-size:11.8px; color:var(--muted); line-height:1.5; margin:2px 4px 0; }
+  @media (max-width: 760px){
+    .map-wrap{ grid-template-columns:1fr; }
+    .map-embed{ min-height:260px; }
+    .map-embed iframe{ min-height:260px; }
+  }
+
   .no-results{text-align:center; padding:60px 20px; color:var(--muted);}
   .no-results svg{width:40px;height:40px;stroke:var(--line); margin-bottom:12px;}
 
@@ -427,6 +479,38 @@
     </div>
 
     <div id="groupsContainer"></div>
+
+    <section class="map-section" id="mapSection">
+      <div class="group-head" style="border-bottom-color:var(--gold);">
+        <h2>Карта региона</h2>
+      </div>
+      <div class="map-wrap">
+        <div class="map-embed">
+          <iframe
+            title="Карта Атырауской и Мангистауской областей"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=47.5%2C41.8%2C55.5%2C48.8&amp;layer=mapnik&amp;marker=47.1164%2C51.8792"
+            loading="lazy">
+          </iframe>
+        </div>
+        <div class="map-links">
+          <a class="map-link-card" href="https://2gis.kz/atyrau/geo/11822966929096712" target="_blank" rel="noopener">
+            <div class="map-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div>
+              <div class="map-link-title">Атырауская область</div>
+              <div class="map-link-sub">Открыть подробную карту в 2ГИС ↗</div>
+            </div>
+          </a>
+          <a class="map-link-card" href="https://2gis.kz/aktau/geo/11822966929096719" target="_blank" rel="noopener">
+            <div class="map-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div>
+              <div class="map-link-title">Мангистауская область</div>
+              <div class="map-link-sub">Открыть подробную карту в 2ГИС ↗</div>
+            </div>
+          </a>
+          <p class="map-note">Встроенная карта показывает расположение обоих регионов. Для организаций, адресов и маршрутов внутри области — переходите в 2ГИС по кнопкам выше.</p>
+        </div>
+      </div>
+    </section>
 
     <button class="add-group-btn" id="addGroupBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -735,7 +819,7 @@ function render(){
   const container = document.getElementById('groupsContainer');
   const navList = document.getElementById('navList');
   let totalPeople = 0;
-  let navHtml = '';
+  let navHtml = `<li><a href="#mapSection" class="nav-link" data-target="mapSection"><span class="nav-dot" style="background:var(--blue);"></span><span>Карта региона</span></a></li>`;
   let groupsHtml = '';
 
   DATA.groups.forEach((g)=>{
@@ -772,7 +856,7 @@ function render(){
 function populateJumpSelect(){
   const select = document.getElementById('jumpSelect');
   const prevValue = select.value;
-  let opts = '<option value="">— выберите раздел —</option>';
+  let opts = '<option value="">— выберите раздел —</option><option value="mapSection">Карта региона</option>';
   DATA.groups.forEach(g=>{
     opts += `<option value="${g.id}">${esc(g.title)} (${g.people.length})</option>`;
   });
