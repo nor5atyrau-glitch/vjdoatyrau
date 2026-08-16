@@ -632,8 +632,12 @@
           "id": "p-p5hntvu",
           "name": "Дюсембиев Нурлан Шапаевич",
           "position": "Юрисконсульт",
-          "phones_office": [],
-          "phones_mobile": [],
+          "phones_office": [
+            "95 51 04"
+          ],
+          "phones_mobile": [
+            "8 775 962 17 91"
+          ],
           "birth": ""
         }
       ]
