@@ -620,7 +620,11 @@ async function getFileSha(){
   const headers = { 'Accept': 'application/vnd.github+json' };
   if(githubToken) headers['Authorization'] = 'token ' + githubToken;
   const resp = await fetch(GITHUB_API_URL + '?ref=' + GITHUB_BRANCH, { headers });
-  if(!resp.ok) throw new Error('Не удалось получить текущую версию файла (' + resp.status + ')');
+  if(!resp.ok){
+    const j = await resp.json().catch(()=>({}));
+    console.error('getFileSha failed', resp.status, j);
+    throw new Error('sha-fetch-' + resp.status);
+  }
   const j = await resp.json();
   return j.sha;
 }
@@ -654,15 +658,28 @@ async function saveData(){
       return true;
     }
     const j = await resp.json().catch(()=>({}));
-    if(resp.status === 401 || resp.status === 403){
-      showToast('⚠ Токен недействителен или нет прав на запись в репозиторий');
+    console.error('saveData PUT failed', resp.status, j);
+    if(resp.status === 401){
+      showToast('⚠ GitHub отклонил токен (401) — войдите заново');
+    } else if(resp.status === 403){
+      showToast('⚠ У токена нет права записи (403): ' + (j.message || ''));
+    } else if(resp.status === 404){
+      showToast('⚠ GitHub не нашёл data.json (404) — проверьте, что файл лежит в корне репозитория');
+    } else if(resp.status === 409){
+      showToast('⚠ Файл изменился в другом месте — обновите страницу и повторите');
+    } else if(resp.status === 422){
+      showToast('⚠ GitHub отклонил запрос (422): ' + (j.message || 'проверьте данные'));
     } else {
-      showToast('⚠ GitHub: ' + (j.message || 'не удалось сохранить'));
+      showToast('⚠ GitHub ' + resp.status + ': ' + (j.message || 'не удалось сохранить'));
     }
     return false;
   }catch(e){
     console.error('GitHub save error', e);
-    showToast('⚠ Ошибка сети при сохранении на GitHub');
+    if(String(e.message).startsWith('sha-fetch-')){
+      showToast('⚠ Не удалось прочитать текущий файл перед сохранением (' + e.message.replace('sha-fetch-','') + ')');
+    } else {
+      showToast('⚠ Ошибка сети при сохранении на GitHub — подробности в консоли (F12)');
+    }
     return false;
   }
 }
@@ -931,30 +948,36 @@ async function tryLogin(){
   submitBtn.disabled = true;
   submitBtn.textContent = 'Проверка…';
   try{
-    // Validate the token actually has write access to this repo by asking
-    // GitHub for the repo's collaborator permission level for this token's user.
-    const resp = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`, {
+    // Ask for the actual data.json file with this token — this is the exact
+    // same call saveData() makes right before writing, so if this succeeds,
+    // saving will too (assuming the token also has write access, which the
+    // save step itself will report clearly if it doesn't).
+    const resp = await fetch(GITHUB_API_URL + '?ref=' + GITHUB_BRANCH, {
       headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
     });
-    if(!resp.ok){
-      errorEl.textContent = 'Токен не принят GitHub — проверьте, что он не истёк и скопирован полностью.';
+    if(resp.status === 401){
+      errorEl.textContent = 'Токен не принят GitHub (401) — проверьте, что он скопирован полностью и не истёк.';
       errorEl.classList.add('visible');
       return;
     }
-    const repoInfo = await resp.json();
-    const canWrite = !!(repoInfo.permissions && (repoInfo.permissions.push || repoInfo.permissions.admin));
-    if(!canWrite){
-      errorEl.textContent = 'У этого токена нет прав на запись в репозиторий vjdoatyrau.';
+    if(resp.status === 404){
+      errorEl.textContent = 'GitHub не нашёл data.json в репозитории vjdoatyrau (404) — проверьте, что файл лежит в корне и токену выдан доступ именно к этому репозиторию.';
+      errorEl.classList.add('visible');
+      return;
+    }
+    if(!resp.ok){
+      const j = await resp.json().catch(()=>({}));
+      errorEl.textContent = 'GitHub ответил ошибкой ' + resp.status + (j.message ? (': ' + j.message) : '') + '.';
       errorEl.classList.add('visible');
       return;
     }
     githubToken = token;
     closeModal('loginModal');
     setAdminState(true);
-    showToast('Вы вошли как администратор');
+    showToast('Вы вошли как администратор. Права на запись проверятся при первом сохранении.');
   }catch(e){
     console.error(e);
-    errorEl.textContent = 'Ошибка сети — не удалось связаться с GitHub.';
+    errorEl.textContent = 'Ошибка сети — браузер не смог связаться с api.github.com. Проверьте интернет-соединение и откройте консоль разработчика (F12) для подробностей.';
     errorEl.classList.add('visible');
   }finally{
     submitBtn.disabled = false;
